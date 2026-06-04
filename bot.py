@@ -2,22 +2,17 @@ import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Настройка логирования
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TOKEN = "8748664569:AAFaXfDaLC8UQAloZi36I6ncX6PiOKF8LaE"
 
 async def send_main_menu(message):
-    """Отправляет главное меню"""
     text = """🏠 <b>Добро пожаловать в ИИ-помощник по подбору новостроек!</b>
 
 Я помогу вам выбрать надежную квартиру без скрытых угроз.
 
-<b> Что я умею:</b>
+<b>Что я умею:</b>
 ✅ Подберу проверенные ЖК под ваш бюджет
 ✅ Покажу скрытые угрозы новостроек
 ✅ Рассчитаю инвестиционную привлекательность
@@ -38,7 +33,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_main_menu(update.message)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = """ <b>Команды бота:</b>
+    text = """<b>Команды бота:</b>
 
 /start - Начать работу с ботом
 /help - Показать это меню
@@ -52,7 +47,7 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 Мы — команда экспертов по недвижимости.
 
-<b> Наша миссия:</b>
+<b>Наша миссия:</b>
 Помочь вам купить квартиру без скрытых угроз и переплат.
 
 <b>✅ Что мы проверяем:</b>
@@ -130,7 +125,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 4️⃣ <b>Школа на карте может оказаться ТЦ</b> — проверяйте ПЗЗ участка.
 5️⃣ <b>Парковок не хватит</b> — даже с подземным паркингом.
 6️⃣ <b>Трещины фасада</b> — скрываются за вентфасадом.
-7️⃣ <b>Земля в залоге</b> — проверяйте проектную документацию.
+7️ <b>Земля в залоге</b> — проверяйте проектную документацию.
 
 <b>💡 Хотите, чтобы на просмотре с вами был профессиональный приемщик?</b>
 Нажмите /contact"""
@@ -146,12 +141,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await query.message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
 
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработчик ошибок"""
-    logger.error(f"Exception while handling an update: {context.error}")
-
 def main():
-    """Запуск бота"""
     logger.info("Запуск бота...")
     app = Application.builder().token(TOKEN).build()
     
@@ -160,8 +150,6 @@ def main():
     app.add_handler(CommandHandler("about", about))
     app.add_handler(CommandHandler("contact", contact))
     app.add_handler(CallbackQueryHandler(button_handler))
-    
-    app.add_error_handler(error_handler)
     
     logger.info("Бот запущен успешно!")
     app.run_polling(drop_pending_updates=True)
