@@ -1,10 +1,20 @@
 import asyncio
+import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.error import NetworkError, TimedOut
+
+# Настройка логирования
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 TOKEN = "8748664569:AAFaXfDaLC8UQAloZi36I6ncX6PiOKF8LaE"
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def send_main_menu(message):
+    """Отправляет главное меню"""
     text = """🏠 <b>Добро пожаловать в ИИ-помощник по подбору новостроек!</b>
 
 Я помогу вам выбрать надежную квартиру без скрытых угроз.
@@ -24,7 +34,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
+    await message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_main_menu(update.message)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = """ <b>Команды бота:</b>
@@ -66,7 +79,12 @@ async def contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
 📱 WhatsApp: +7 (999) 000-00-00
 📧 Email: info@example.com"""
     
-    await update.message.reply_text(text, parse_mode='HTML')
+    keyboard = [
+        [InlineKeyboardButton("↩️ Назад в меню", callback_data='back_to_menu')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -84,6 +102,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 3️⃣ Свыше 12 млн ₽
 
 Напишите цифру, и я подберу варианты."""
+        
+        keyboard = [
+            [InlineKeyboardButton("↩️ Назад в меню", callback_data='back_to_menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
     elif query.data == 'for_life':
         text = """🏡 <b>Покупка для себя</b>
 
@@ -93,35 +117,66 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 <b>Какой бюджет рассматриваете?</b>
 
 Напишите в свободной форме, и я подберу варианты."""
-    else:  # checklist
+        
+        keyboard = [
+            [InlineKeyboardButton("↩️ Назад в меню", callback_data='back_to_menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+    elif query.data == 'checklist':
         text = """📋 <b>Чек-лист: 7 скрытых угроз новостроек</b>
 
-1️ <b>Тонкие стены</b> — стукните по стене. Глухой звук = хорошо, звонкий = слышимость 100%.
+1️⃣ <b>Тонкие стены</b> — стукните по стене. Глухой звук = хорошо, звонкий = слышимость 100%.
 2️⃣ <b>Окна на север</b> — риск плесени и сырости.
 3️⃣ <b>Кривые стены под отделкой</b> — через год плитка отвалится.
-4️ <b>Школа на карте может оказаться ТЦ</b> — проверяйте ПЗЗ участка.
+4️⃣ <b>Школа на карте может оказаться ТЦ</b> — проверяйте ПЗЗ участка.
 5️⃣ <b>Парковок не хватит</b> — даже с подземным паркингом.
 6️⃣ <b>Трещины фасада</b> — скрываются за вентфасадом.
 7️⃣ <b>Земля в залоге</b> — проверяйте проектную документацию.
 
 <b>💡 Хотите, чтобы на просмотре с вами был профессиональный приемщик?</b>
 Нажмите /contact"""
+        
+        keyboard = [
+            [InlineKeyboardButton("↩️ Назад в меню", callback_data='back_to_menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+    elif query.data == 'back_to_menu':
+        # Возврат в главное меню
+        await send_main_menu(query.message)
+        return
     
-    await query.message.reply_text(text, parse_mode='HTML')
+    await query.message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик ошибок"""
+    logger.error(f"Exception while handling an update: {context.error}")
 
 def main():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
-    app = Application.builder().token(TOKEN).build()
-    
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("about", about))
-    app.add_handler(CommandHandler("contact", contact))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    
-    app.run_polling()
+    """Запуск бота с автоперезапуском"""
+    while True:
+        try:
+            logger.info("Запуск бота...")
+            app = Application.builder().token(TOKEN).build()
+            
+            app.add_handler(CommandHandler("start", start))
+            app.add_handler(CommandHandler("help", help_command))
+            app.add_handler(CommandHandler("about", about))
+            app.add_handler(CommandHandler("contact", contact))
+            app.add_handler(CallbackQueryHandler(button_handler))
+            
+            app.add_error_handler(error_handler)
+            
+            logger.info("Бот запущен успешно!")
+            app.run_polling(drop_pending_updates=True)
+            
+        except (NetworkError, TimedOut) as e:
+            logger.error(f"Сетевая ошибка: {e}. Перезапуск через 10 секунд...")
+            asyncio.sleep(10)
+        except Exception as e:
+            logger.error(f"Критическая ошибка: {e}. Перезапуск через 30 секунд...")
+            asyncio.sleep(30)
 
 if __name__ == '__main__':
     main()
