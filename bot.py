@@ -1,8 +1,6 @@
-import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from telegram.error import NetworkError, TimedOut
 
 # Настройка логирования
 logging.basicConfig(
@@ -143,7 +141,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup = InlineKeyboardMarkup(keyboard)
         
     elif query.data == 'back_to_menu':
-        # Возврат в главное меню
         await send_main_menu(query.message)
         return
     
@@ -154,29 +151,20 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error(f"Exception while handling an update: {context.error}")
 
 def main():
-    """Запуск бота с автоперезапуском"""
-    while True:
-        try:
-            logger.info("Запуск бота...")
-            app = Application.builder().token(TOKEN).build()
-            
-            app.add_handler(CommandHandler("start", start))
-            app.add_handler(CommandHandler("help", help_command))
-            app.add_handler(CommandHandler("about", about))
-            app.add_handler(CommandHandler("contact", contact))
-            app.add_handler(CallbackQueryHandler(button_handler))
-            
-            app.add_error_handler(error_handler)
-            
-            logger.info("Бот запущен успешно!")
-            app.run_polling(drop_pending_updates=True)
-            
-        except (NetworkError, TimedOut) as e:
-            logger.error(f"Сетевая ошибка: {e}. Перезапуск через 10 секунд...")
-            asyncio.sleep(10)
-        except Exception as e:
-            logger.error(f"Критическая ошибка: {e}. Перезапуск через 30 секунд...")
-            asyncio.sleep(30)
+    """Запуск бота"""
+    logger.info("Запуск бота...")
+    app = Application.builder().token(TOKEN).build()
+    
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("about", about))
+    app.add_handler(CommandHandler("contact", contact))
+    app.add_handler(CallbackQueryHandler(button_handler))
+    
+    app.add_error_handler(error_handler)
+    
+    logger.info("Бот запущен успешно!")
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':
     main()
