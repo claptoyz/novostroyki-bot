@@ -7,7 +7,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-TOKEN = "8748664569:AAFaXfDaLC8UQAloZi36I6ncX6PiOKF8LaE"
+TOKEN = "8748664569:AAGJvSmjZ8HG66Xoy-Xg1A0QhnyLCTlSlt8"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
