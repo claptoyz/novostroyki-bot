@@ -1,6 +1,6 @@
 import os
 import logging
-from groq import Groq
+from mistralai import Mistral
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
 
@@ -8,9 +8,12 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 TOKEN = "8748664569:AAGJvSmjZ8HG66Xoy-Xg1A0QhnyLCTlSlt8"
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY")
 
-groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+if MISTRAL_API_KEY:
+    mistral_client = Mistral(api_key=MISTRAL_API_KEY)
+else:
+    mistral_client = None
 
 def load_catalog():
     try:
@@ -36,7 +39,7 @@ async def send_main_menu(message):
     keyboard = [
         [InlineKeyboardButton("💰 Инвестиции", callback_data='invest')],
         [InlineKeyboardButton("🏡 Для себя", callback_data='for_life')],
-        [InlineKeyboardButton("📋 Получить чек-лист", callback_data='checklist')]
+        [InlineKeyboardButton(" Получить чек-лист", callback_data='checklist')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -72,9 +75,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'for_life':
         text = "🏡 <b>Для себя</b>\n\nПонял! Для себя главное — комфорт и надежность.\n\nНапишите мне в чат ваши пожелания (например: 'Трешка в центре, рядом школа, до 15 млн'), и я найду лучшие ЖК."
     elif query.data == 'checklist':
-        text = """📋 <b>Чек-лист: 7 скрытых угроз новостроек</b>
+        text = """ <b>Чек-лист: 7 скрытых угроз новостроек</b>
 1️⃣ Тонкие стены
-2️⃣ Окна на север (риск плесени)
+2️ Окна на север (риск плесени)
 3️⃣ Кривые стены под отделкой
 4️⃣ Инфраструктура на бумаге
 5️⃣ Дефицит парковок
@@ -88,8 +91,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
 async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not groq_client:
-        await update.message.reply_text("⚠️ Ошибка: ИИ не подключен. Проверьте GROQ_API_KEY.")
+    if not mistral_client:
+        await update.message.reply_text("⚠️ Ошибка: ИИ не подключен. Проверьте MISTRAL_API_KEY.")
         return
 
     user_text = update.message.text
@@ -106,23 +109,23 @@ async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     status_msg = await update.message.reply_text("🔍 Ищу лучшие варианты для вас...")
 
     try:
-        chat_completion = groq_client.chat.completions.create(
+        chat_response = mistral_client.chat.complete(
+            model="mistral-small-latest",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_text}
             ],
-            model="llama-3.3-70b-versatile",
             temperature=0.5,
             max_tokens=500
         )
         
-        ai_response = chat_completion.choices[0].message.content
+        ai_response = chat_response.choices[0].message.content
         
         await status_msg.delete()
         await update.message.reply_text(ai_response)
         
     except Exception as e:
-        logger.error(f"Ошибка Groq API: {e}")
+        logger.error(f"Ошибка Mistral API: {e}")
         await status_msg.edit_text("⚠️ ИИ сейчас немного устал. Попробуйте переформулировать вопрос или напишите /contact.")
 
 def main():
