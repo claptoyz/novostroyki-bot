@@ -5,58 +5,122 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 TOKEN = "8748664569:AAFaXfDaLC8UQAloZi36I6ncX6PiOKF8LaE"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = """Здравствуйте! 👋 Я ИИ-помощник по подбору новостроек.
+    text = """🏠 <b>Добро пожаловать в ИИ-помощник по подбору новостроек!</b>
 
-Вот 7 скрытых угроз, которые нужно проверить перед покупкой:
+Я помогу вам выбрать надежную квартиру без скрытых угроз.
 
-1️⃣ Тонкие стены — стукните по стене. Глухой звук = хорошо, звонкий = слышимость 100%.
-2️⃣ Окна на север — риск плесени и сырости.
-3️⃣ Кривые стены под отделкой — через год плитка отвалится.
-4️⃣ Школа на карте может оказаться ТЦ — проверяйте ПЗЗ участка.
-5️⃣ Парковок не хватит даже с подземным паркингом.
-6️⃣ Трещины фасада скрываются за вентфасадом.
-7️⃣ Земля может быть в залоге у банка.
+<b> Что я умею:</b>
+✅ Подберу проверенные ЖК под ваш бюджет
+✅ Покажу скрытые угрозы новостроек
+✅ Рассчитаю инвестиционную привлекательность
+✅ Связжу с экспертом для бесплатной консультации
 
-Не хотите рисковать? Выберите, что вам важнее:"""
+Выберите, что вам важно:"""
     
     keyboard = [
-        [InlineKeyboardButton("Инвестиции", callback_data='invest')],
-        [InlineKeyboardButton("Для себя", callback_data='for_life')]
+        [InlineKeyboardButton("💰 Инвестиции", callback_data='invest')],
+        [InlineKeyboardButton("🏡 Для себя", callback_data='for_life')],
+        [InlineKeyboardButton("📋 Получить чек-лист", callback_data='checklist')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.message.reply_text(text, reply_markup=reply_markup)
+    await update.message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = """ <b>Команды бота:</b>
+
+/start - Начать работу с ботом
+/help - Показать это меню
+/about - О сервисе
+/contact - Связаться с экспертом"""
+    
+    await update.message.reply_text(text, parse_mode='HTML')
+
+async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = """ℹ️ <b>О сервисе</b>
+
+Мы — команда экспертов по недвижимости.
+
+<b> Наша миссия:</b>
+Помочь вам купить квартиру без скрытых угроз и переплат.
+
+<b>✅ Что мы проверяем:</b>
+• Надежность застройщика
+• Качество строительства
+• Юридическую чистоту
+• Инвестиционную привлекательность"""
+    
+    await update.message.reply_text(text, parse_mode='HTML')
+
+async def contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = """📞 <b>Связаться с экспертом</b>
+
+Хотите персональную консультацию?
+
+<b>Как получить консультацию:</b>
+1. Пройдите подбор через бота (нажмите /start)
+2. Оставьте контакт в конце
+3. Эксперт свяжется с вами в течение 15 минут
+
+<b>Или напишите напрямую:</b>
+📱 WhatsApp: +7 (999) 000-00-00
+📧 Email: info@example.com"""
+    
+    await update.message.reply_text(text, parse_mode='HTML')
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
     if query.data == 'invest':
-        text = """Отлично! Для инвестиций важны ликвидность и рост цены.
+        text = """💰 <b>Инвестиции в новостройки</b>
 
-Какой бюджет рассматриваете?
+Отлично! Для инвестиций важны ликвидность и рост цены.
 
-1 — До 7 млн
-2 — 7-12 млн
-3 — Свыше 12 млн
+<b>Какой бюджет рассматриваете?</b>
+
+1️⃣ До 7 млн ₽
+2️⃣ 7-12 млн ₽
+3️⃣ Свыше 12 млн ₽
 
 Напишите цифру, и я подберу варианты."""
-    else:
-        text = """Понял! Для себя главное — комфорт и надежность.
+    elif query.data == 'for_life':
+        text = """🏡 <b>Покупка для себя</b>
 
-Какой район или метро вам интересно? И какой бюджет?
+Понял! Для себя главное — комфорт и надежность.
+
+<b>Какой район или метро вам интересно?</b>
+<b>Какой бюджет рассматриваете?</b>
 
 Напишите в свободной форме, и я подберу варианты."""
+    else:  # checklist
+        text = """📋 <b>Чек-лист: 7 скрытых угроз новостроек</b>
+
+1️ <b>Тонкие стены</b> — стукните по стене. Глухой звук = хорошо, звонкий = слышимость 100%.
+2️⃣ <b>Окна на север</b> — риск плесени и сырости.
+3️⃣ <b>Кривые стены под отделкой</b> — через год плитка отвалится.
+4️ <b>Школа на карте может оказаться ТЦ</b> — проверяйте ПЗЗ участка.
+5️⃣ <b>Парковок не хватит</b> — даже с подземным паркингом.
+6️⃣ <b>Трещины фасада</b> — скрываются за вентфасадом.
+7️⃣ <b>Земля в залоге</b> — проверяйте проектную документацию.
+
+<b>💡 Хотите, чтобы на просмотре с вами был профессиональный приемщик?</b>
+Нажмите /contact"""
     
-    await query.message.reply_text(text)
+    await query.message.reply_text(text, parse_mode='HTML')
 
 def main():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     
     app = Application.builder().token(TOKEN).build()
+    
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("about", about))
+    app.add_handler(CommandHandler("contact", contact))
     app.add_handler(CallbackQueryHandler(button_handler))
+    
     app.run_polling()
 
 if __name__ == '__main__':
